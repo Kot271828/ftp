@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -9,6 +10,10 @@ import (
 )
 
 func main() {
+	run(context.Background())
+}
+
+func run(ctx context.Context) {
 	listener, err := net.Listen("tcp", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
@@ -20,22 +25,30 @@ func main() {
 			log.Println(err)
 			continue
 		}
-		handleConn(conn)
+		child_ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+		handleConn(child_ctx, conn)
 	}
 }
 
-func handleConn(conn net.Conn) {
+func handleConn(ctx context.Context, conn net.Conn) {
+	userName := conn.RemoteAddr().String()
+	log.Printf("%s's connection is opened.\n", userName)
+
 	scanner := bufio.NewScanner(conn)
-	for scanner.Scan() {
+	for {
+		fmt.Fprintf(conn, "%s >> ", userName)
+		if !scanner.Scan() {
+			break
+		}
 
 		// parse
 		cmd := parseCommand(scanner.Text())
 
 		// handle command
-		for i, arg := range cmd {
-			fmt.Fprintln(conn, i, arg)
-		}
+		fmt.Fprintf(conn, "\tRecieve %s command.\n", cmd[0])
 	}
+	log.Printf("%s's connection is closed.\n", userName)
 }
 
 func parseCommand(s string) []string {
