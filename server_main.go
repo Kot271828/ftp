@@ -46,6 +46,10 @@ func handleConn(ctx context.Context, conn net.Conn) {
 		cmd := parseCommand(scanner.Text())
 
 		// handle command
+		if cmd[0] == "QUIT" {
+			conn.Close()
+			break
+		}
 		fmt.Fprintf(conn, "\tRecieve %s command.\n", cmd[0])
 	}
 	log.Printf("%s's connection is closed.\n", userName)
