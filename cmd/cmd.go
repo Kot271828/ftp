@@ -32,9 +32,17 @@ func (t Type) String() string {
 	return str
 }
 
-func Parse(s string) (string, []string) {
+func Parse(s string) (Type, []string) {
 	args := strings.Split(strings.Trim(s, " "), " ")
-	cmd := strings.ToUpper(args[0])
+	var cmd Type
+	switch strings.ToUpper(args[0]) {
+	case "QUIT":
+		cmd = QUIT
+	case "USER":
+		cmd = USER
+	default:
+		cmd = NOOP
+	}
 	args = args[1:]
 	return cmd, args
 }
