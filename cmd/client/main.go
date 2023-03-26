@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -18,19 +17,37 @@ func main() {
 
 	done := make(chan struct{})
 	go func() {
-		io.Copy(os.Stdout, conn)
+		scanner := bufio.NewScanner(conn)
+		for scanner.Scan() {
+			fmt.Println(scanner.Text())
+		}
 		done <- struct{}{}
 	}()
 
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		cmd, args := parseCommand(scanner.Text())
-		fmt.Println(cmd, args)
+	input := stdin()
+	for {
+		select {
+		case cl := <-input:
+			cmd, args := parseCommand(cl)
+			fmt.Println(cmd, args)
 
-		fmt.Fprintln(conn, scanner.Text())
+			fmt.Fprintln(conn, cl)
+		case <-done:
+			conn.Close()
+			return
+		}
 	}
-	conn.Close()
-	<-done
+}
+
+func stdin() <-chan string {
+	stdin := make(chan string)
+	scanner := bufio.NewScanner(os.Stdin)
+	go func() {
+		for scanner.Scan() {
+			stdin <- scanner.Text()
+		}
+	}()
+	return stdin
 }
 
 func parseCommand(s string) (string, []string) {
