@@ -38,20 +38,24 @@ func handleConn(ctx context.Context, conn net.Conn) {
 
 	scanner := bufio.NewScanner(conn)
 	for {
-		fmt.Fprintf(conn, "%s >> ", userName)
 		if !scanner.Scan() {
 			break
 		}
 
 		// parse
-		cmd, args := cmd.Parse(scanner.Text())
+		c, args := cmd.Parse(scanner.Text())
+		log.Println("Recieve:", c, args)
 
 		// handle command
-		if cmd == "QUIT" {
+		var replyCode string
+		switch c {
+		case cmd.USER:
+			replyCode = "200"
+		case cmd.QUIT:
 			conn.Close()
 			break
 		}
-		fmt.Fprintf(conn, "\tRecieve %s command and args %s.\n", cmd, args)
+		fmt.Fprintf(conn, "%s\n", replyCode)
 	}
 	log.Printf("%s's connection is closed.\n", userName)
 }

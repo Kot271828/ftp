@@ -16,23 +16,30 @@ func main() {
 		log.Fatal(err)
 	}
 
+	reply := make(chan string)
 	done := make(chan struct{})
+	// input from user
 	go func() {
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
-			fmt.Println(scanner.Text())
+			reply <- scanner.Text()
 		}
 		done <- struct{}{}
 	}()
 
+	// login
+	fmt.Fprintf(conn, "%s annoymous\n", cmd.USER)
+	//s := <-reply
+	log.Println(<-reply)
+
+	// user PI
 	input := stdin()
 	for {
 		select {
-		case cl := <-input:
-			cmd, args := cmd.Parse(cl)
-			fmt.Println(cmd, args)
-
-			fmt.Fprintln(conn, cl)
+		case _ = <-input:
+			// output to server PI
+			cmd := fmt.Sprint(cmd.QUIT)
+			fmt.Fprintln(conn, cmd)
 		case <-done:
 			conn.Close()
 			return
