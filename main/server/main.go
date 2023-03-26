@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"path/filepath"
 
 	"ftp/cmd"
 )
@@ -35,6 +36,7 @@ func run(ctx context.Context) {
 func handleConn(ctx context.Context, conn net.Conn) {
 	userName := conn.RemoteAddr().String()
 	log.Printf("%s's connection is opened.\n", userName)
+	cwd, _ := filepath.Abs("./test_dir/server_dir/")
 
 	scanner := bufio.NewScanner(conn)
 	for {
@@ -50,7 +52,16 @@ func handleConn(ctx context.Context, conn net.Conn) {
 		var replyCode string
 		switch c {
 		case cmd.USER:
-			replyCode = "200"
+			replyCode = "230"
+		case cmd.PWD:
+			data_conn, err := net.Dial("tcp", "localhost:10000")
+			if err != nil {
+				replyCode = "421"
+				break
+			}
+			fmt.Fprintln(data_conn, cwd)
+			data_conn.Close()
+			replyCode = "250"
 		case cmd.QUIT:
 			conn.Close()
 			break

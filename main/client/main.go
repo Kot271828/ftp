@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
+	"strings"
 
 	"ftp/cmd"
 )
@@ -36,10 +38,32 @@ func main() {
 	input := stdin()
 	for {
 		select {
-		case _ = <-input:
-			// output to server PI
-			cmd := fmt.Sprint(cmd.QUIT)
-			fmt.Fprintln(conn, cmd)
+		case cl := <-input:
+			switch strings.Split(cl, " ")[0] {
+			case "exit":
+				cmd := fmt.Sprint(cmd.QUIT)
+				fmt.Fprintln(conn, cmd)
+			case "pwd":
+				listener, err := net.Listen("tcp", "localhost:10000")
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+				cmd := fmt.Sprint(cmd.PWD)
+				fmt.Fprintln(conn, cmd)
+
+				data_conn, err := listener.Accept()
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+				io.Copy(os.Stdin, data_conn)
+				data_conn.Close()
+				listener.Close()
+
+				log.Println(<-reply)
+			}
+
 		case <-done:
 			conn.Close()
 			return
