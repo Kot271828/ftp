@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strings"
+
+	"ftp/cmd"
 )
 
 func main() {
@@ -43,7 +44,7 @@ func handleConn(ctx context.Context, conn net.Conn) {
 		}
 
 		// parse
-		cmd, args := parseCommand(scanner.Text())
+		cmd, args := cmd.Parse(scanner.Text())
 
 		// handle command
 		if cmd == "QUIT" {
@@ -53,11 +54,4 @@ func handleConn(ctx context.Context, conn net.Conn) {
 		fmt.Fprintf(conn, "\tRecieve %s command and args %s.\n", cmd, args)
 	}
 	log.Printf("%s's connection is closed.\n", userName)
-}
-
-func parseCommand(s string) (string, []string) {
-	args := strings.Split(strings.Trim(s, " "), " ")
-	cmd := strings.ToUpper(args[0])
-	args = args[1:]
-	return cmd, args
 }

@@ -6,7 +6,8 @@ import (
 	"log"
 	"net"
 	"os"
-	"strings"
+
+	"ftp/cmd"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 	for {
 		select {
 		case cl := <-input:
-			cmd, args := parseCommand(cl)
+			cmd, args := cmd.Parse(cl)
 			fmt.Println(cmd, args)
 
 			fmt.Fprintln(conn, cl)
@@ -48,11 +49,4 @@ func stdin() <-chan string {
 		}
 	}()
 	return stdin
-}
-
-func parseCommand(s string) (string, []string) {
-	args := strings.Split(strings.Trim(s, " "), " ")
-	cmd := strings.ToUpper(args[0])
-	args = args[1:]
-	return cmd, args
 }
