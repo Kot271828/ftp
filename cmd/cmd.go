@@ -7,6 +7,7 @@ type Type int
 const (
 	USER Type = iota
 	PWD
+	LIST
 	QUIT
 	PORT
 	STRU
@@ -21,6 +22,8 @@ func (t Type) String() string {
 		str = "USER"
 	case PWD:
 		str = "PWD"
+	case LIST:
+		str = "LIST"
 	case QUIT:
 		str = "QUIT"
 	case PORT:
@@ -45,6 +48,8 @@ func Parse(s string) (Type, []string) {
 		cmd = USER
 	case "PWD":
 		cmd = PWD
+	case "LIST":
+		cmd = LIST
 	default:
 		cmd = NOOP
 	}

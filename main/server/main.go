@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"path/filepath"
@@ -55,6 +56,16 @@ func handleConn(ctx context.Context, conn net.Conn) {
 			reply = "230"
 		case cmd.PWD:
 			reply = fmt.Sprintf("257 %s created.", cwd)
+		case cmd.LIST:
+			data_conn, err := net.Dial("tcp", "localhost:10000")
+			if err != nil {
+				reply = "421"
+				break
+			}
+			fmt.Fprintf(conn, "%s\n", "125")
+			ls(data_conn, cwd, args[0])
+			data_conn.Close()
+			reply = "250"
 		case cmd.QUIT:
 			conn.Close()
 			break
@@ -62,4 +73,23 @@ func handleConn(ctx context.Context, conn net.Conn) {
 		fmt.Fprintf(conn, "%s\n", reply)
 	}
 	log.Printf("%s's connection is closed.\n", userName)
+}
+
+func ls(w io.Writer, cwd, arg string) {
+	var p string
+	if filepath.IsAbs(arg) {
+		p = arg
+	} else {
+		p = filepath.Join(cwd, arg)
+		p, _ = filepath.Abs(p)
+	}
+	matches, err := filepath.Glob(fmt.Sprintf("%s/*", p))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	for _, match := range matches {
+		fmt.Fprintln(w, match)
+	}
+
 }
