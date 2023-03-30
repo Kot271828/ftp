@@ -49,24 +49,17 @@ func handleConn(ctx context.Context, conn net.Conn) {
 		log.Println("Recieve:", c, args)
 
 		// handle command
-		var replyCode string
+		var reply string
 		switch c {
 		case cmd.USER:
-			replyCode = "230"
+			reply = "230"
 		case cmd.PWD:
-			data_conn, err := net.Dial("tcp", "localhost:10000")
-			if err != nil {
-				replyCode = "421"
-				break
-			}
-			fmt.Fprintln(data_conn, cwd)
-			data_conn.Close()
-			replyCode = "250"
+			reply = fmt.Sprintf("257 %s created.", cwd)
 		case cmd.QUIT:
 			conn.Close()
 			break
 		}
-		fmt.Fprintf(conn, "%s\n", replyCode)
+		fmt.Fprintf(conn, "%s\n", reply)
 	}
 	log.Printf("%s's connection is closed.\n", userName)
 }

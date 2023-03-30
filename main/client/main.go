@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -20,7 +19,7 @@ func main() {
 
 	reply := make(chan string)
 	done := make(chan struct{})
-	// input from user
+	// reply from server
 	go func() {
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
@@ -44,24 +43,10 @@ func main() {
 				cmd := fmt.Sprint(cmd.QUIT)
 				fmt.Fprintln(conn, cmd)
 			case "pwd":
-				listener, err := net.Listen("tcp", "localhost:10000")
-				if err != nil {
-					log.Println(err)
-					continue
-				}
 				cmd := fmt.Sprint(cmd.PWD)
 				fmt.Fprintln(conn, cmd)
 
-				data_conn, err := listener.Accept()
-				if err != nil {
-					log.Println(err)
-					continue
-				}
-				io.Copy(os.Stdin, data_conn)
-				data_conn.Close()
-				listener.Close()
-
-				log.Println(<-reply)
+				fmt.Println(strings.Split(<-reply, " ")[1])
 			}
 
 		case <-done:
