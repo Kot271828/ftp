@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"path/filepath"
 
 	"ftp/cmd"
@@ -66,6 +67,16 @@ func handleConn(ctx context.Context, conn net.Conn) {
 			ls(data_conn, cwd, args[0])
 			data_conn.Close()
 			reply = "250"
+		case cmd.RETR:
+			data_conn, err := net.Dial("tcp", "localhost:10000")
+			if err != nil {
+				reply = "421"
+				break
+			}
+			fmt.Fprintf(conn, "%s\n", "125")
+			cp(data_conn, cwd, args[0])
+			data_conn.Close()
+			reply = "250"
 		case cmd.QUIT:
 			conn.Close()
 			break
@@ -92,4 +103,21 @@ func ls(w io.Writer, cwd, arg string) {
 		fmt.Fprintln(w, match)
 	}
 
+}
+
+func cp(w io.Writer, cwd, arg string) {
+	var p string
+	if filepath.IsAbs(arg) {
+		p = arg
+	} else {
+		p = filepath.Join(cwd, arg)
+		p, _ = filepath.Abs(p)
+	}
+	f, err := os.Open(p)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	io.Copy(w, f)
+	f.Close()
 }

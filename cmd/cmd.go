@@ -50,6 +50,8 @@ func Parse(s string) (Type, []string) {
 		cmd = PWD
 	case "LIST":
 		cmd = LIST
+	case "RETR":
+		cmd = RETR
 	default:
 		cmd = NOOP
 	}

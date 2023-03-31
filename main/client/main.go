@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"ftp/cmd"
@@ -36,6 +37,7 @@ func main() {
 
 	// user PI
 	input := stdin()
+	cwd, _ := filepath.Abs("./test_dir/client_dir/")
 	for {
 		select {
 		case cl := <-input:
@@ -68,6 +70,34 @@ func main() {
 				log.Println(<-reply)
 				io.Copy(os.Stdin, data_conn)
 				data_conn.Close()
+				listener.Close()
+
+				log.Println(<-reply)
+			case "cp":
+				listener, err := net.Listen("tcp", "localhost:10000")
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+				p := filepath.Join(cwd, filepath.Base(args[0]))
+				f, err := os.Create(p)
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+
+				cmd := fmt.Sprint(cmd.RETR)
+				fmt.Fprintf(conn, "%s %s\n", cmd, args[0])
+
+				data_conn, err := listener.Accept()
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+				log.Println(<-reply)
+				io.Copy(f, data_conn)
+				data_conn.Close()
+				f.Close()
 				listener.Close()
 
 				log.Println(<-reply)
