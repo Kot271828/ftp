@@ -60,7 +60,13 @@ func main() {
 					continue
 				}
 				cmd := fmt.Sprint(cmd.LIST)
-				fmt.Fprintf(conn, "%s %s\n", cmd, args[0])
+				var p string
+				if len(args) != 0 {
+					p = args[0]
+				} else {
+					p = "."
+				}
+				fmt.Fprintf(conn, "%s %s\n", cmd, p)
 
 				data_conn, err := listener.Accept()
 				if err != nil {
