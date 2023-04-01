@@ -77,6 +77,31 @@ func handleConn(ctx context.Context, conn net.Conn) {
 			cp(data_conn, cwd, args[0])
 			data_conn.Close()
 			reply.Send(conn, "250")
+		case cmd.TYPE:
+			t := args[0]
+			if t != "A" {
+				reply.Send(conn, "504")
+				break
+			}
+			if (len(args) >= 2) && (args[1] != "N") {
+				reply.Send(conn, "504")
+				break
+			}
+			reply.Send(conn, "200")
+		case cmd.MODE:
+			m := args[0]
+			if m == "S" {
+				reply.Send(conn, "200")
+			} else {
+				reply.Send(conn, "504")
+			}
+		case cmd.STRU:
+			s := args[0]
+			if s == "F" {
+				reply.Send(conn, "200")
+			} else {
+				reply.Send(conn, "504")
+			}
 		case cmd.QUIT:
 			conn.Close()
 			break

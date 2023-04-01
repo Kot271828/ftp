@@ -10,6 +10,8 @@ const (
 	LIST
 	QUIT
 	PORT
+	TYPE
+	MODE
 	STRU
 	RETR
 	NOOP
@@ -27,6 +29,12 @@ func (t Type) String() string {
 		str = "LIST"
 	case QUIT:
 		str = "QUIT"
+	case TYPE:
+		str = "TYPE"
+	case MODE:
+		str = "MODE"
+	case STRU:
+		str = "STRU"
 	case PORT:
 		str = "PORT"
 	case RETR:
@@ -55,6 +63,12 @@ func Parse(s string) (Type, []string) {
 		cmd = LIST
 	case "RETR":
 		cmd = RETR
+	case "TYPE":
+		cmd = TYPE
+	case "MODE":
+		cmd = MODE
+	case "STRU":
+		cmd = STRU
 	default:
 		cmd = UNKNOWN
 	}
