@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"ftp/cmd"
+	"ftp/reply"
 )
 
 func main() {
@@ -51,41 +52,40 @@ func handleConn(ctx context.Context, conn net.Conn) {
 		log.Println("Recieve:", c, args)
 
 		// handle command
-		var reply string
 		switch c {
 		case cmd.USER:
-			reply = "230"
+			reply.Send(conn, "230")
 		case cmd.PWD:
-			reply = fmt.Sprintf("257 %s created.", cwd)
+			reply.Send257(conn, "257", cwd)
 		case cmd.LIST:
 			data_conn, err := net.Dial("tcp", "localhost:10000")
 			if err != nil {
-				reply = "421"
+				reply.Send(conn, "421")
 				break
 			}
-			fmt.Fprintf(conn, "%s\n", "125")
+			reply.Send(conn, "125")
 			ls(data_conn, cwd, args[0])
 			data_conn.Close()
-			reply = "250"
+			reply.Send(conn, "250")
 		case cmd.RETR:
 			data_conn, err := net.Dial("tcp", "localhost:10000")
 			if err != nil {
-				reply = "421"
+				reply.Send(conn, "421")
 				break
 			}
-			fmt.Fprintf(conn, "%s\n", "125")
+			reply.Send(conn, "125")
 			cp(data_conn, cwd, args[0])
 			data_conn.Close()
-			reply = "250"
+			reply.Send(conn, "250")
 		case cmd.QUIT:
 			conn.Close()
 			break
 		case cmd.UNKNOWN:
-			reply = "502"
+			reply.Send(conn, "502")
 		case cmd.NOOP:
-			reply = "200"
+			reply.Send(conn, "200")
 		}
-		fmt.Fprintf(conn, "%s\n", reply)
+
 	}
 	log.Printf("%s's connection is closed.\n", userName)
 }
