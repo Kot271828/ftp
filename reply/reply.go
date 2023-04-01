@@ -5,7 +5,9 @@ import (
 	"io"
 )
 
-var replyText = map[string]string{
+type Code string
+
+var replyText = map[Code]string{
 	"200": "Command okay.",
 	"500": "Syntax error, command unrecognized.",
 	"501": "Syntax error in parameters or arguments.",
@@ -49,13 +51,13 @@ var replyText = map[string]string{
 	"553": "Requested action not taken.",
 }
 
-func Send(w io.Writer, code string) {
+func Send(w io.Writer, code Code) {
 	text := replyText[code]
 	reply := fmt.Sprintf("%s %s", code, text)
 	fmt.Fprintln(w, reply)
 }
 
-func Send257(w io.Writer, code string, filepath string) {
+func Send257(w io.Writer, code Code, filepath string) {
 	// TODO: code == "257" の assert
 
 	text := fmt.Sprintf("%s created.", filepath)
