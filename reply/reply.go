@@ -60,7 +60,7 @@ func Send(w io.Writer, code Code) {
 func Send257(w io.Writer, code Code, filepath string) {
 	// TODO: code == "257" の assert
 
-	text := fmt.Sprintf("%s created.", filepath)
+	text := fmt.Sprintf("\"%s\" created.", filepath)
 	reply := fmt.Sprintf("%s %s", code, text)
 	fmt.Fprintln(w, reply)
 }

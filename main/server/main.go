@@ -70,10 +70,14 @@ func handleConn(ctx context.Context, conn net.Conn) {
 			if err != nil {
 				log.Fatalln(err)
 			}
-			reply.Send(conn, "230")
+			reply.Send(conn, "200")
 		case cmd.PWD:
 			reply.Send257(conn, "257", cwd)
 		case cmd.LIST:
+			if len(args) != 1 {
+				reply.Send(conn, "500")
+				break
+			}
 			data_conn, err := net.Dial("tcp", data_conn_address.String())
 			if err != nil {
 				reply.Send(conn, "421")
