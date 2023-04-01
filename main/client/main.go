@@ -31,6 +31,7 @@ func main() {
 	}()
 
 	// login
+	log.Println(<-reply)
 	fmt.Fprintf(conn, "%s annoymous\n", cmd.USER)
 	//s := <-reply
 	log.Println(<-reply)

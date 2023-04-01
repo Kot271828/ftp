@@ -9,6 +9,8 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"ftp/cmd"
 	"ftp/reply"
@@ -37,9 +39,12 @@ func run(ctx context.Context) {
 }
 
 func handleConn(ctx context.Context, conn net.Conn) {
+	reply.Send(conn, "200")
+
 	userName := conn.RemoteAddr().String()
 	log.Printf("%s's connection is opened.\n", userName)
 	cwd, _ := filepath.Abs("./test_dir/server_dir/")
+	data_conn_address, _ := net.ResolveTCPAddr("tcp", "127.0.0.1:10000")
 
 	scanner := bufio.NewScanner(conn)
 	for {
@@ -49,16 +54,27 @@ func handleConn(ctx context.Context, conn net.Conn) {
 
 		// parse
 		c, args := cmd.Parse(scanner.Text())
-		log.Println("Recieve:", c, args)
+		log.Println("Recieve:", scanner.Text())
 
 		// handle command
 		switch c {
 		case cmd.USER:
 			reply.Send(conn, "230")
+		case cmd.PORT:
+			addrs := strings.Split(args[0], ",")
+			i, _ := strconv.Atoi(addrs[4])
+			j, _ := strconv.Atoi(addrs[5])
+			addr := fmt.Sprintf("%s.%s.%s.%s:%s", addrs[0], addrs[1], addrs[2], addrs[3], strconv.Itoa(i*256+j))
+			var err error
+			data_conn_address, err = net.ResolveTCPAddr("tcp", addr)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			reply.Send(conn, "230")
 		case cmd.PWD:
 			reply.Send257(conn, "257", cwd)
 		case cmd.LIST:
-			data_conn, err := net.Dial("tcp", "localhost:10000")
+			data_conn, err := net.Dial("tcp", data_conn_address.String())
 			if err != nil {
 				reply.Send(conn, "421")
 				break
@@ -68,7 +84,7 @@ func handleConn(ctx context.Context, conn net.Conn) {
 			data_conn.Close()
 			reply.Send(conn, "250")
 		case cmd.RETR:
-			data_conn, err := net.Dial("tcp", "localhost:10000")
+			data_conn, err := net.Dial("tcp", data_conn_address.String())
 			if err != nil {
 				reply.Send(conn, "421")
 				break

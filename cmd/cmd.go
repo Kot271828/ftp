@@ -69,6 +69,8 @@ func Parse(s string) (Type, []string) {
 		cmd = MODE
 	case "STRU":
 		cmd = STRU
+	case "PORT":
+		cmd = PORT
 	default:
 		cmd = UNKNOWN
 	}
