@@ -80,6 +80,10 @@ func handleConn(ctx context.Context, conn net.Conn) {
 		case cmd.QUIT:
 			conn.Close()
 			break
+		case cmd.UNKNOWN:
+			reply = "502"
+		case cmd.NOOP:
+			reply = "200"
 		}
 		fmt.Fprintf(conn, "%s\n", reply)
 	}

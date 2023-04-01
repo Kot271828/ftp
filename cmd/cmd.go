@@ -13,6 +13,7 @@ const (
 	STRU
 	RETR
 	NOOP
+	UNKNOWN
 )
 
 func (t Type) String() string {
@@ -32,6 +33,8 @@ func (t Type) String() string {
 		str = "RETR"
 	case NOOP:
 		str = "NOOP"
+	case UNKNOWN:
+		str = "UNKNOWN"
 	default:
 		panic("There is a const having no String method.")
 	}
@@ -53,7 +56,7 @@ func Parse(s string) (Type, []string) {
 	case "RETR":
 		cmd = RETR
 	default:
-		cmd = NOOP
+		cmd = UNKNOWN
 	}
 	args = args[1:]
 	return cmd, args
