@@ -77,3 +77,16 @@ func Parse(s string) (Type, []string) {
 	args = args[1:]
 	return cmd, args
 }
+
+func IsValid(cmd Type, args []string) bool {
+	switch cmd {
+	case QUIT, PWD, NOOP:
+		return len(args) == 0
+	case USER, PORT, STRU, MODE, TYPE, RETR:
+		return len(args) == 1
+	case LIST:
+		return len(args) <= 1
+	default:
+		return true
+	}
+}

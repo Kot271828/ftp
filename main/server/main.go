@@ -43,6 +43,7 @@ func handleConn(ctx context.Context, conn net.Conn) {
 
 	userName := conn.RemoteAddr().String()
 	log.Printf("%s's connection is opened.\n", userName)
+
 	cwd, _ := filepath.Abs("./test_dir/server_dir/")
 	dataConnAddress, _ := net.ResolveTCPAddr("tcp", "127.0.0.1:10000")
 	t := "A"
@@ -55,7 +56,12 @@ func handleConn(ctx context.Context, conn net.Conn) {
 
 		// parse
 		c, args := cmd.Parse(scanner.Text())
-		log.Println("Recieve:", scanner.Text())
+		log.Println("-->", scanner.Text())
+
+		if !cmd.IsValid(c, args) {
+			reply.Send(conn, "501")
+			continue
+		}
 
 		// handle command
 		switch c {
@@ -75,9 +81,11 @@ func handleConn(ctx context.Context, conn net.Conn) {
 		case cmd.PWD:
 			reply.Send257(conn, "257", cwd)
 		case cmd.LIST:
-			if len(args) != 1 {
-				reply.Send(conn, "500")
-				break
+			var p string
+			if len(args) == 1 {
+				p = args[0]
+			} else {
+				p = cwd
 			}
 			dataConn, err := net.Dial("tcp", dataConnAddress.String())
 			if err != nil {
@@ -85,7 +93,7 @@ func handleConn(ctx context.Context, conn net.Conn) {
 				break
 			}
 			reply.Send(conn, "125")
-			ls(dataConn, cwd, args[0])
+			ls(dataConn, cwd, p)
 			dataConn.Close()
 			reply.Send(conn, "250")
 		case cmd.RETR:
@@ -123,6 +131,7 @@ func handleConn(ctx context.Context, conn net.Conn) {
 				reply.Send(conn, "504")
 			}
 		case cmd.QUIT:
+			reply.Send(conn, "221")
 			conn.Close()
 			break
 		case cmd.UNKNOWN:
