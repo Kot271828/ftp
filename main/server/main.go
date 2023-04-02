@@ -39,12 +39,13 @@ func run(ctx context.Context) {
 }
 
 func handleConn(ctx context.Context, conn net.Conn) {
-	reply.Send(conn, "200")
+	reply.Send(conn, "220")
 
 	userName := conn.RemoteAddr().String()
 	log.Printf("%s's connection is opened.\n", userName)
 	cwd, _ := filepath.Abs("./test_dir/server_dir/")
-	data_conn_address, _ := net.ResolveTCPAddr("tcp", "127.0.0.1:10000")
+	dataConnAddress, _ := net.ResolveTCPAddr("tcp", "127.0.0.1:10000")
+	t := "A"
 
 	scanner := bufio.NewScanner(conn)
 	for {
@@ -66,7 +67,7 @@ func handleConn(ctx context.Context, conn net.Conn) {
 			j, _ := strconv.Atoi(addrs[5])
 			addr := fmt.Sprintf("%s.%s.%s.%s:%s", addrs[0], addrs[1], addrs[2], addrs[3], strconv.Itoa(i*256+j))
 			var err error
-			data_conn_address, err = net.ResolveTCPAddr("tcp", addr)
+			dataConnAddress, err = net.ResolveTCPAddr("tcp", addr)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -78,34 +79,33 @@ func handleConn(ctx context.Context, conn net.Conn) {
 				reply.Send(conn, "500")
 				break
 			}
-			data_conn, err := net.Dial("tcp", data_conn_address.String())
+			dataConn, err := net.Dial("tcp", dataConnAddress.String())
 			if err != nil {
-				reply.Send(conn, "421")
+				reply.Send(conn, "425")
 				break
 			}
 			reply.Send(conn, "125")
-			ls(data_conn, cwd, args[0])
-			data_conn.Close()
+			ls(dataConn, cwd, args[0])
+			dataConn.Close()
 			reply.Send(conn, "250")
 		case cmd.RETR:
-			data_conn, err := net.Dial("tcp", data_conn_address.String())
+			dataConn, err := net.Dial("tcp", dataConnAddress.String())
 			if err != nil {
-				reply.Send(conn, "421")
+				reply.Send(conn, "425")
 				break
 			}
 			reply.Send(conn, "125")
-			cp(data_conn, cwd, args[0])
-			data_conn.Close()
+			cp(dataConn, cwd, args[0], t)
+			dataConn.Close()
 			reply.Send(conn, "250")
 		case cmd.TYPE:
-			t := args[0]
-			if t != "A" {
+			switch args[0] {
+			case "A":
+				t = "A"
+			case "I":
+				t = "I"
+			default:
 				reply.Send(conn, "504")
-				break
-			}
-			if (len(args) >= 2) && (args[1] != "N") {
-				reply.Send(conn, "504")
-				break
 			}
 			reply.Send(conn, "200")
 		case cmd.MODE:
@@ -149,12 +149,12 @@ func ls(w io.Writer, cwd, arg string) {
 		return
 	}
 	for _, match := range matches {
-		fmt.Fprintln(w, match)
+		fmt.Fprintf(w, "%s\r\n", match)
 	}
 
 }
 
-func cp(w io.Writer, cwd, arg string) {
+func cp(w io.Writer, cwd, arg string, t string) {
 	var p string
 	if filepath.IsAbs(arg) {
 		p = arg
@@ -163,10 +163,19 @@ func cp(w io.Writer, cwd, arg string) {
 		p, _ = filepath.Abs(p)
 	}
 	f, err := os.Open(p)
+	defer f.Close()
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	io.Copy(w, f)
-	f.Close()
+	switch t {
+	case "A":
+		s := bufio.NewScanner(f)
+		for s.Scan() {
+			fmt.Fprintf(w, "%s\r\n", s.Text())
+		}
+	case "I":
+		io.Copy(w, f)
+	}
+	fmt.Fprint(w, "\r\n")
 }

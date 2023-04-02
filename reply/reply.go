@@ -54,7 +54,7 @@ var replyText = map[Code]string{
 func Send(w io.Writer, code Code) {
 	text := replyText[code]
 	reply := fmt.Sprintf("%s %s", code, text)
-	fmt.Fprintln(w, reply)
+	fmt.Fprintf(w, "%s\r\n", reply)
 }
 
 func Send257(w io.Writer, code Code, filepath string) {
@@ -62,5 +62,5 @@ func Send257(w io.Writer, code Code, filepath string) {
 
 	text := fmt.Sprintf("\"%s\" created.", filepath)
 	reply := fmt.Sprintf("%s %s", code, text)
-	fmt.Fprintln(w, reply)
+	fmt.Fprintf(w, "%s\r\n", reply)
 }
