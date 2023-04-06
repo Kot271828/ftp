@@ -75,7 +75,8 @@ func handleConn(ctx context.Context, conn net.Conn) {
 			var err error
 			dataConnAddress, err = net.ResolveTCPAddr("tcp", addr)
 			if err != nil {
-				reply.Send(conn, "501")	
+				reply.Send(conn, "501")
+				break
 			}
 			reply.Send(conn, "200")
 		case cmd.PWD:
