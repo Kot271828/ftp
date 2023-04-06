@@ -59,7 +59,7 @@ func handleConn(ctx context.Context, conn net.Conn) {
 		log.Println("-->", scanner.Text())
 
 		if !cmd.IsValid(c, args) {
-			reply.Send(conn, "501")
+			reply.Send(conn, "500")
 			continue
 		}
 
@@ -75,7 +75,7 @@ func handleConn(ctx context.Context, conn net.Conn) {
 			var err error
 			dataConnAddress, err = net.ResolveTCPAddr("tcp", addr)
 			if err != nil {
-				log.Fatalln(err)
+				reply.Send(conn, "501")	
 			}
 			reply.Send(conn, "200")
 		case cmd.PWD:
@@ -155,6 +155,7 @@ func ls(w io.Writer, cwd, arg string) {
 	matches, err := filepath.Glob(fmt.Sprintf("%s/*", p))
 	if err != nil {
 		log.Println(err)
+		reply.Send(w, "450")
 		return
 	}
 	for _, match := range matches {
